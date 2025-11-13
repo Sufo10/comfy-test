@@ -96,7 +96,7 @@ class SceneVideoWanIteratorNode:
         """Polls the ComfyUI API history for the prompt's completion."""
         self.logger.info(f"Scene {scene_id} - Starting poll loop for prompt ID: {prompt_id}.")
         
-        max_retries = 500
+        max_retries = 50
         retries = 0
 
         while True:
@@ -106,7 +106,6 @@ class SceneVideoWanIteratorNode:
                 response.raise_for_status() # Catches HTTPError if status code is bad
                 data = response.json()
                 self.logger.info(f"Scene {scene_id} - Polling response status code: {data}")
-                self.logger.info(f"Scene {scene_id} - Polling response: {json.dumps(data, indent=2)}")
                 
                 if prompt_id in data:
                     entry = data[prompt_id]
