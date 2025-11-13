@@ -70,26 +70,17 @@ class SceneVideoWanIteratorNode:
 
         return logger
 
-    def _inject_scene_into_workflow(self, workflow, scenario: str):
+    def _inject_scene_into_workflow(self, workflow, scene):
         """Deep copies the workflow and injects the scenario into a 'TextPrompt' node."""
-        wf_copy = json.loads(json.dumps(workflow))  # deep copy
-        injected = False
-        for node_data in wf_copy["nodes"].values():
-            # Customize this check if your prompt node has a different class_type or custom title
-            if node_data["class_type"] == "CLIPTextEncode" or node_data.get("title") == "TextPrompt":
-                # Assuming the prompt is always in the 'text' input field
-                if "text" in node_data["inputs"]:
-                    # Safely replace the prompt text
-                    node_data["inputs"]["text"] = scenario
-                    injected = True
-                    break
-        
-        if not injected:
-            self.logger.warning("Could not find a suitable node (e.g., CLIPTextEncode or titled 'TextPrompt') to inject the scenario. The default prompt will be used.")
+        scenario = scene.get("scenario", "No scenario provided")
+        scene_id = scene.get("scene", "N/A")
 
+        wf_copy = json.loads(json.dumps(workflow)) 
+        wf_copy["89"]["inputs"]["text"] = scenario
+        wf_copy["80"]["inputs"]["filename_prefix"] = f"video/test/scene_{scene_id}"
         return wf_copy
 
-    def _poll_for_completion(self, comfy_api_url: str, prompt_id: str, scene_id: int, poll_interval: int = 3):
+    def _poll_for_completion(self, comfy_api_url, prompt_id, scene_id, poll_interval = 3):
         """Polls the ComfyUI API history for the prompt's completion."""
         self.logger.info(f"Scene {scene_id} - Polling for completion (ID: {prompt_id}).")
         
@@ -153,7 +144,7 @@ class SceneVideoWanIteratorNode:
             self.logger.exception(f"Scene {scene_id} - Video download failed: {e}")
             raise
 
-    def _run_scene(self, comfy_api_url: str, video_output_dir: Path, workflow_data , scene):
+    def _run_scene(self, comfy_api_url, video_output_dir, workflow_data , scene):
         """Submits, polls, and downloads the video for a single scene."""
         scene_id = scene.get("scene", "N/A")
         scenario = scene.get("scenario", "No scenario provided")
@@ -164,7 +155,7 @@ class SceneVideoWanIteratorNode:
         
         try:
             # 1. Inject Prompt
-            workflow = self._inject_scene_into_workflow(workflow_data, scenario)
+            workflow = self._inject_scene_into_workflow(workflow_data, scene)
             
             # 2. Queue Prompt
             response = requests.post(f"{comfy_api_url}/prompt", json={"prompt": workflow})
@@ -193,7 +184,7 @@ class SceneVideoWanIteratorNode:
             self.logger.error(f"Scene {scene_id} - FAILED after {duration}s. Error: {error_message}")
             return {"scene": scene_id, "error": error_message, "status": "failed", "duration_s": duration}
 
-    def run_scenes(self, scenes_json: str, comfy_api_url: str, video_output_dir: str, workflow_path: str, max_workers: int = 3, trigger: int = 0):
+    def run_scenes(self, scenes_json, comfy_api_url, video_output_dir, workflow_path, max_workers = 3, trigger = 0):
         """Main execution function."""
         try:
             scenes = json.loads(scenes_json)
