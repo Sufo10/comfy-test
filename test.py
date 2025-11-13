@@ -161,7 +161,7 @@ class SceneVideoWanIteratorNode:
             response = requests.post(f"{comfy_api_url}/prompt", json={"prompt": workflow})
             response.raise_for_status()
             prompt_id = response.json().get("prompt_id")
-            
+            self.logger.info(response.json())
             if not prompt_id:
                 raise ValueError("ComfyUI did not return a prompt_id.")
             
@@ -169,13 +169,13 @@ class SceneVideoWanIteratorNode:
             result = self._poll_for_completion(comfy_api_url, prompt_id, scene_id)
             
             # 4. Download Video
-            video_path = self._download_video(comfy_api_url, video_output_dir, result, scene_id)
+            # video_path = self._download_video(comfy_api_url, video_output_dir, result, scene_id)
             
             # 5. Success
             duration = round(time.time() - start_time, 2)
-            self.logger.info(f"Scene {scene_id} - Completed in {duration}s. Saved to {video_path}")
+            self.logger.info(f"Scene {scene_id} - Completed in {duration}s")
             
-            return {"scene": scene_id, "path": str(video_path), "status": "done", "duration_s": duration}
+            return {"scene": scene_id, "status": "done", "duration_s": duration}
         
         except Exception as e:
             # Log failure and return error result
