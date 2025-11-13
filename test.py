@@ -38,8 +38,8 @@ class SceneVideoWanIteratorNode:
             },
         }
 
-    RETURN_TYPES = ("STRING", "STRING") 
-    RETURN_NAMES = ("results", "output_directory")
+    RETURN_TYPES = ("STRING") 
+    RETURN_NAMES = ("results")
     FUNCTION = "run_scenes"
     CATEGORY = "Video Generation"
     OUTPUT_NODE = True 
@@ -69,7 +69,7 @@ class SceneVideoWanIteratorNode:
 
         return logger
 
-    def _inject_scene_into_workflow(self, workflow, scene):
+    def _inject_scene_into_workflow(self, workflow, scene, video_output_dir):
         """Deep copies the workflow and injects the scenario and sets the filename prefix."""
         scenario = scene.get("scenario", "No scenario provided")
         scene_id = scene.get("scene", "N/A")
@@ -85,7 +85,7 @@ class SceneVideoWanIteratorNode:
 
         # Set Filename Prefix into node 80 (Save Image/Video)
         if "58" in wf_copy:
-            prefix = f"video/test/scene_{scene_id}"
+            prefix = f"{video_output_dir.rstrip('/')}/scene_{scene_id}"
             wf_copy["58"]["inputs"]["filename_prefix"] = prefix
             self.logger.info(f"Scene {scene_id} - Set filename prefix to '{prefix}' in node 58.")
         else:
@@ -110,10 +110,18 @@ class SceneVideoWanIteratorNode:
                 if prompt_id in data:
                     entry = data[prompt_id]
                     status = entry.get("status", {"status_str": ""}).get("status_str", "").lower()
+                    outputs = entry.get("output", {"58": {"images": []}}).get("58", {"images": []}).get("images", [])[0]
+
+                    if outputs:
+                        subfolder = outputs.get("subfolder", "")
+                        filename = outputs.get("filename", "")
+                        output_path = f"output/{subfolder}/{filename}"
+                    else:
+                        output_path = None
                     
                     if status == "success":
                         self.logger.info(f"Scene {scene_id} - Polling successful. Status: COMPLETED.")
-                        return entry
+                        return output_path
                     elif status == "error":
                         self.logger.error(f"Scene {scene_id} - Polling failed. Status: FAILED.")
                         raise RuntimeError(f"Workflow failed on ComfyUI for scene {scene_id}.")
@@ -186,7 +194,7 @@ class SceneVideoWanIteratorNode:
         try:
             # 1. Inject Prompt
             self.logger.info(f"Scene {scene_id} (Step 1/3): Injecting prompt into workflow.")
-            workflow = self._inject_scene_into_workflow(workflow_data, scene)
+            workflow = self._inject_scene_into_workflow(workflow_data, scene, video_output_dir)
             
             # 2. Queue Prompt
             self.logger.info(f"Scene {scene_id} (Step 2/3): Sending prompt to ComfyUI API: {comfy_api_url}/prompt")
@@ -214,7 +222,7 @@ class SceneVideoWanIteratorNode:
             # Since download is skipped, we only confirm generation completed on server
             self.logger.info(f"Scene {scene_id} - SUCCESS. Generation completed on server in {duration}s.")
             
-            return {"scene": scene_id, "status": "done", "duration_s": duration} # Note: 'path' is removed as download is skipped
+            return {"scene": scene_id, "video_path": result, "status": "done", "duration_s": duration}
         
         except requests.exceptions.HTTPError as e:
             # Catch HTTP errors specific to the /prompt endpoint
@@ -308,4 +316,4 @@ class SceneVideoWanIteratorNode:
         # --------------------------------------------------
         
         # Return results as a JSON string
-        return (final_results_json, video_output_dir)
+        return (final_results_json)
