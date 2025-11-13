@@ -257,6 +257,7 @@ class SceneVideoWanIteratorNode:
 
     def run_scenes(self, scenes_json, comfy_api_url, video_output_dir, workflow_path, max_workers = 3, trigger = 0):
         """Main execution function."""
+        total_start_time = time.time()
         try:
             scenes = json.loads(scenes_json)
         except json.JSONDecodeError:
@@ -333,5 +334,9 @@ class SceneVideoWanIteratorNode:
         print("--- FINAL RESULTS JSON END ---\n")
         # --------------------------------------------------
         
+        total_end_time = time.time()
+        total_duration = round(total_end_time - total_start_time, 2)
+        self.logger.info(f"⏰ Total Execution Time for All {len(scenes)} Scenarios: {total_duration} seconds.")
+
         # Return results as a JSON string
         return (final_results_json,)
