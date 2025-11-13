@@ -1,4 +1,4 @@
-import { app } from "/scripts/app.js";
+import { app } from '/scripts/app.js';
 
 app.registerExtension({
   name: 'Comfy.DynamicWorkflowEditor',
@@ -19,10 +19,21 @@ app.registerExtension({
       const refreshButtonWidget = this.addWidget('button', '📝 Refresh Inputs');
 
       const fetchWorkflowJSON = async (path) => {
-        // Trigger the Python node to get the workflow JSON
-        const result = await this.graph.runNode(this.id);
-        if (!result) throw new Error('No workflow JSON returned');
-        return result;
+        if (!path) throw new Error('No path provided');
+
+        // Call backend API to read JSON from path
+        const response = await fetch(path, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ path }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to load JSON: ${response.statusText}`);
+        }
+
+        const workflowJSON = await response.json();
+        return workflowJSON;
       };
 
       const updateDynamicInputs = async () => {
