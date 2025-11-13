@@ -39,7 +39,7 @@ class SceneVideoWanIteratorNode:
             },
         }
 
-    RETURN_TYPES = ("LIST", "STRING")
+    RETURN_TYPES = ("STRING", "STRING")
     RETURN_NAMES = ("results", "output_directory")
     FUNCTION = "run_scenes"
     CATEGORY = "Video Generation"
@@ -246,4 +246,4 @@ class SceneVideoWanIteratorNode:
 
         self.logger.info(f"\n--- All Scenes Processed. Total Results: {len(results)} ---\n")
         
-        return (results, video_output_dir)
+        return (json.dumps(results), video_output_dir)
