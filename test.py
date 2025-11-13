@@ -79,7 +79,7 @@ class SceneVideoWanIteratorNode:
         # Inject Scenario into node 89 (CLIPTextEncode/Prompt)
         if "6" in wf_copy:
             wf_copy["6"]["inputs"]["text"] = scenario
-            self.logger.debug(f"Scene {scene_id} - Injected scenario into node 6.")
+            self.logger.info(f"Scene {scene_id} - Injected scenario into node 6.")
         else:
             self.logger.warning(f"Scene {scene_id} - Node 6 not found for scenario injection.")
 
@@ -87,7 +87,7 @@ class SceneVideoWanIteratorNode:
         if "58" in wf_copy:
             prefix = f"video/test/scene_{scene_id}"
             wf_copy["58"]["inputs"]["filename_prefix"] = prefix
-            self.logger.debug(f"Scene {scene_id} - Set filename prefix to '{prefix}' in node 58.")
+            self.logger.info(f"Scene {scene_id} - Set filename prefix to '{prefix}' in node 58.")
         else:
             self.logger.warning(f"Scene {scene_id} - Node 58 not found for filename prefix setting.")
         return wf_copy
@@ -105,6 +105,7 @@ class SceneVideoWanIteratorNode:
                 response = requests.get(f"{comfy_api_url}/history/{prompt_id}", timeout=10)
                 response.raise_for_status() # Catches HTTPError if status code is bad
                 data = response.json()
+                self.logger.info(f"Scene {scene_id} - Polling response status code: {data}")
                 self.logger.info(f"Scene {scene_id} - Polling response: {json.dumps(data, indent=2)}")
                 
                 if prompt_id in data:
@@ -132,47 +133,47 @@ class SceneVideoWanIteratorNode:
                 self.logger.warning(f"Scene {scene_id} - Polling connection error ({e}). Retrying in {poll_interval}s...")
                 
 
-    def _download_video(self, comfy_api_url, video_output_dir, result_data, scene_id):
-        """Finds the output file info in the history result and downloads it."""
-        self.logger.info(f"Scene {scene_id} - Starting video download process.")
-        try:
-            video_output_dir.mkdir(parents=True, exist_ok=True)
-            outputs = result_data.get("outputs", {})
+    # def _download_video(self, comfy_api_url, video_output_dir, result_data, scene_id):
+    #     """Finds the output file info in the history result and downloads it."""
+    #     self.logger.info(f"Scene {scene_id} - Starting video download process.")
+    #     try:
+    #         video_output_dir.mkdir(parents=True, exist_ok=True)
+    #         outputs = result_data.get("outputs", {})
             
-            for node_output in outputs.values():
-                for file_info in node_output.get("images", []): 
-                    if file_info.get("type", "").lower() == "output" and file_info.get("filename"):
-                        filename = file_info['filename']
-                        subfolder = file_info.get('subfolder', '')
+    #         for node_output in outputs.values():
+    #             for file_info in node_output.get("images", []): 
+    #                 if file_info.get("type", "").lower() == "output" and file_info.get("filename"):
+    #                     filename = file_info['filename']
+    #                     subfolder = file_info.get('subfolder', '')
                         
-                        file_url = f"{comfy_api_url}/view?filename={filename}&subfolder={subfolder}&type=output"
-                        local_path = video_output_dir / f"scene_{scene_id}_{filename}"
+    #                     file_url = f"{comfy_api_url}/view?filename={filename}&subfolder={subfolder}&type=output"
+    #                     local_path = video_output_dir / f"scene_{scene_id}_{filename}"
                         
-                        self.logger.info(f"Scene {scene_id} - Identified output file: {filename}. Starting download.")
+    #                     self.logger.info(f"Scene {scene_id} - Identified output file: {filename}. Starting download.")
                         
-                        r = requests.get(file_url, stream=True, timeout=120)
-                        r.raise_for_status() # Catches HTTPError if status code is bad
+    #                     r = requests.get(file_url, stream=True, timeout=120)
+    #                     r.raise_for_status() # Catches HTTPError if status code is bad
                         
-                        # Ensure .mp4 extension for output
-                        if local_path.suffix.lower() not in ['.mp4', '.mov', '.webm', '.gif']:
-                            local_path = local_path.with_suffix('.mp4')
+    #                     # Ensure .mp4 extension for output
+    #                     if local_path.suffix.lower() not in ['.mp4', '.mov', '.webm', '.gif']:
+    #                         local_path = local_path.with_suffix('.mp4')
 
-                        with open(local_path, "wb") as f:
-                            for chunk in r.iter_content(chunk_size=8192):
-                                f.write(chunk)
+    #                     with open(local_path, "wb") as f:
+    #                         for chunk in r.iter_content(chunk_size=8192):
+    #                             f.write(chunk)
                         
-                        self.logger.info(f"Scene {scene_id} - Download complete. Saved to: {local_path.resolve()}")
-                        return local_path
+    #                     self.logger.info(f"Scene {scene_id} - Download complete. Saved to: {local_path.resolve()}")
+    #                     return local_path
             
-            self.logger.warning(f"Scene {scene_id} - No video file information found in ComfyUI history output.")
-            raise FileNotFoundError("No output files (images/videos) found in workflow result.")
+    #         self.logger.warning(f"Scene {scene_id} - No video file information found in ComfyUI history output.")
+    #         raise FileNotFoundError("No output files (images/videos) found in workflow result.")
         
-        except requests.exceptions.HTTPError as e:
-            self.logger.error(f"Scene {scene_id} - Download HTTP error: {e}. Status code: {e.response.status_code}")
-            raise ConnectionError(f"Download HTTP failure: {e}")
-        except Exception as e:
-            self.logger.exception(f"Scene {scene_id} - Video download failed: {e}")
-            raise
+    #     except requests.exceptions.HTTPError as e:
+    #         self.logger.error(f"Scene {scene_id} - Download HTTP error: {e}. Status code: {e.response.status_code}")
+    #         raise ConnectionError(f"Download HTTP failure: {e}")
+    #     except Exception as e:
+    #         self.logger.exception(f"Scene {scene_id} - Video download failed: {e}")
+    #         raise
 
     def _run_scene(self, comfy_api_url, video_output_dir, workflow_data, scene):
         """Submits, polls, and downloads the video for a single scene."""
