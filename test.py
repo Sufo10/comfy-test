@@ -14,15 +14,17 @@ class SceneVideoWanIteratorNode:
       4. Logs all events with timing and error details.
     """
 
-    INPUT_TYPES = {
-        "required": {
-            "comfy_api_url": ("STRING", {"default": "http://localhost:8188"}),
-            "video_output_dir": ("STRING", {"default": "./videos"}),
-            "workflow_path": ("STRING", {"default": "./workflow.json"}),
-        },
-        "optional": {
-            "max_workers": ("INT", {"default": 3, "min": 1, "max": 20}),
-            "scenes": ("LIST", {"default": []}),
+    @classmethod
+    def INPUT_TYPES(cls):
+        return  {
+            "required": {
+                "comfy_api_url": ("STRING", {"default": "http://localhost:8188"}),
+                "video_output_dir": ("STRING", {"default": "./videos"}),
+                "workflow_path": ("STRING", {"default": "./workflow.json"}),
+            },
+            "optional": {
+                "max_workers": ("INT", {"default": 3, "min": 1, "max": 20}),
+                "scenes": ("LIST", {"default": []}),
         },
     }
 
