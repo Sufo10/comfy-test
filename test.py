@@ -110,12 +110,12 @@ class SceneVideoWanIteratorNode:
                 
                 if prompt_id in data:
                     entry = data[prompt_id]
-                    status = entry.get("status", "").lower()
+                    status = entry.get("status", {"status_str": ""}).get("status_str", "").lower()
                     
-                    if status == "completed":
+                    if status == "success":
                         self.logger.info(f"Scene {scene_id} - Polling successful. Status: COMPLETED.")
                         return entry
-                    elif status == "failed":
+                    elif status == "error":
                         self.logger.error(f"Scene {scene_id} - Polling failed. Status: FAILED.")
                         raise RuntimeError(f"Workflow failed on ComfyUI for scene {scene_id}.")
                 
