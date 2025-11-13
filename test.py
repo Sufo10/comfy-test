@@ -85,7 +85,7 @@ class SceneVideoWanIteratorNode:
 
         # Set Filename Prefix into node 80 (Save Image/Video)
         if "58" in wf_copy:
-            prefix = f"{video_output_dir.rstrip('/')}/scene_{scene_id}"
+            prefix = f"{Path(video_output_dir).as_posix().rstrip('/')}/scene_{scene_id}"
             wf_copy["58"]["inputs"]["filename_prefix"] = prefix
             self.logger.info(f"Scene {scene_id} - Set filename prefix to '{prefix}' in node 58.")
         else:
