@@ -127,6 +127,7 @@ class SceneVideoWanIteratorNode:
                 raise ConnectionError(f"Polling HTTP failure: {e}")
             except requests.exceptions.RequestException as e:
                 retries += 1
+                self.logger.error(f"Scene retries: {retries}")
                 if retries >= max_retries:
                     self.logger.error(f"Scene {scene_id} - Polling failed after {max_retries} retries.")
                     raise ConnectionError(f"Polling connection failed after {max_retries} retries: {e}")
