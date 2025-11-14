@@ -1,9 +1,10 @@
 import json
 
-class JSONArrayPathConcatenator:
+class JSONArrayPathMultilineConcatenator:
     """
     A custom node to iterate over a JSON array, extract a value from each object 
-    using a dot-separated path, and concatenate the results into a single string.
+    using a dot-separated path, and concatenate the results into a multiline string.
+    The delimiter is hardcoded to a newline ('\n').
     """
     
     @classmethod
@@ -12,13 +13,11 @@ class JSONArrayPathConcatenator:
             "required": {
                 "json_array_string": ("STRING", {"multiline": True, "default": "[{\"a\": {\"b\": \"Value1\"}}, {\"a\": {\"b\": \"Value2\"}}]","tooltip": "JSON string containing an array of objects."}),
                 "path_string": ("STRING", {"default": "a.b", "tooltip": "Dot-separated path to the nested value (e.g., 'a.b.c')."}),
-                "delimiter": ("STRING", {"default": "", "tooltip": "String used to separate the extracted values (e.g., newline '\\n' or comma ', ')."}),
-                "not_found_placeholder": ("STRING", {"default": "", "tooltip": "Placeholder to use if the value at the path is not found in an object."}),
             }
         }
 
     RETURN_TYPES = ("STRING",)
-    RETURN_NAMES = ("concatenated_string",)
+    RETURN_NAMES = ("concatenated_multiline_string",)
     FUNCTION = "concat_by_path"
     CATEGORY = "Utils/JSON"
 
@@ -41,8 +40,13 @@ class JSONArrayPathConcatenator:
         return str(current_data)
 
 
-    def concat_by_path(self, json_array_string, path_string, delimiter, not_found_placeholder):
+    # Removed 'delimiter' and 'not_found_placeholder' from inputs
+    def concat_by_path(self, json_array_string, path_string):
         
+        # Hardcoded values for internal logic
+        NEWLINE_DELIMITER = '\n'
+        NOT_FOUND_PLACEHOLDER = "" # Hardcoded to an empty string
+
         # 1. Parse the JSON Array String
         try:
             data_list = json.loads(json_array_string)
@@ -64,14 +68,13 @@ class JSONArrayPathConcatenator:
         # 3. Iterate, Extract, and Handle Errors
         for item in data_list:
             if isinstance(item, dict):
-                # Use the helper function to safely get the nested value
-                value = self._get_nested_value(item, path_parts, not_found_placeholder)
+                # Use the hardcoded placeholder
+                value = self._get_nested_value(item, path_parts, NOT_FOUND_PLACEHOLDER)
                 extracted_values.append(value)
             else:
-                # If an element in the array is not an object/dict
-                extracted_values.append(not_found_placeholder)
-
-        # 4. Concatenate Results
-        final_string = '\n'.join(extracted_values)
-        print(f"Concatenated String: {final_string}")
+                # If an element in the array is not an object/dict, use placeholder
+                extracted_values.append(NOT_FOUND_PLACEHOLDER)
+        
+        # 4. Concatenate the Extracted Values
+        final_string = NEWLINE_DELIMITER.join(extracted_values)
         return (final_string,)
