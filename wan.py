@@ -279,11 +279,11 @@ class SceneVideoWan5BIteratorNode(BaseSceneIteratorNode):
             self.logger.warning(f"Scene {scene_id} - Node 6 not found for scenario injection.")
 
         # Negative Prompt Injection
-        if "7" in wf_copy:
-            wf_copy["7"]["inputs"]["text"] = "text, subtitles, captions, lower-third graphics, on-screen text, interface windows, extra letters, distorted text, incorrect text, random text, artifacts, blur, low-resolution, pixelation, oversharpening, color banding, anatomical errors, deformed faces, unnatural lighting, inconsistent style, duplicated objects, warped geometry, low-detail backgrounds, bad proportions, missing details, unnatural shadows, jitter, flickering, motion distortion, camera shake, stretched textures, overexposed areas, underexposed areas, noise, glitch, incorrect perspective, poor depth, messy composition"
-            self.logger.info(f"Scene {scene_id} - Injected negative into node 7.")
-        else:
-            self.logger.warning(f"Scene {scene_id} - Node 7 not found for scenario injection.")
+        # if "7" in wf_copy:
+        #     wf_copy["7"]["inputs"]["text"] = "text, subtitles, captions, lower-third graphics, on-screen text, interface windows, extra letters, distorted text, incorrect text, random text, artifacts, blur, low-resolution, pixelation, oversharpening, color banding, anatomical errors, deformed faces, unnatural lighting, inconsistent style, duplicated objects, warped geometry, low-detail backgrounds, bad proportions, missing details, unnatural shadows, jitter, flickering, motion distortion, camera shake, stretched textures, overexposed areas, underexposed areas, noise, glitch, incorrect perspective, poor depth, messy composition"
+        #     self.logger.info(f"Scene {scene_id} - Injected negative into node 7.")
+        # else:
+        #     self.logger.warning(f"Scene {scene_id} - Node 7 not found for scenario injection.")
 
         # Filename Prefix Setting
         if "58" in wf_copy:
@@ -352,12 +352,12 @@ class SceneVideoWan14BIteratorNode(BaseSceneIteratorNode):
         else:
             self.logger.warning(f"Scene {scene_id} - Node 89 not found for scenario injection.")
 
-        # Negative Prompt Injection
-        if "72" in wf_copy:
-            wf_copy["72"]["inputs"]["text"] = "text, subtitles, captions, lower-third graphics, on-screen text, interface windows, extra letters, distorted text, incorrect text, random text, artifacts, blur, low-resolution, pixelation, oversharpening, color banding, anatomical errors, deformed faces, unnatural lighting, inconsistent style, duplicated objects, warped geometry, low-detail backgrounds, bad proportions, missing details, unnatural shadows, jitter, flickering, motion distortion, camera shake, stretched textures, overexposed areas, underexposed areas, noise, glitch, incorrect perspective, poor depth, messy composition"
-            self.logger.info(f"Scene {scene_id} - Injected negative into node 72.")
-        else:
-            self.logger.warning(f"Scene {scene_id} - Node 72 not found for scenario injection.")
+        # # Negative Prompt Injection
+        # if "72" in wf_copy:
+        #     wf_copy["72"]["inputs"]["text"] = "text, subtitles, captions, lower-third graphics, on-screen text, interface windows, extra letters, distorted text, incorrect text, random text, artifacts, blur, low-resolution, pixelation, oversharpening, color banding, anatomical errors, deformed faces, unnatural lighting, inconsistent style, duplicated objects, warped geometry, low-detail backgrounds, bad proportions, missing details, unnatural shadows, jitter, flickering, motion distortion, camera shake, stretched textures, overexposed areas, underexposed areas, noise, glitch, incorrect perspective, poor depth, messy composition"
+        #     self.logger.info(f"Scene {scene_id} - Injected negative into node 72.")
+        # else:
+        #     self.logger.warning(f"Scene {scene_id} - Node 72 not found for scenario injection.")
 
         # Filename Prefix Setting
         if "80" in wf_copy:
@@ -372,14 +372,14 @@ class SceneVideoWan14BIteratorNode(BaseSceneIteratorNode):
             try:
                 # Get FPS value from a connected node (assuming it's node 57)
                 fps_value = wf_copy.get("88", {}).get("inputs", {}).get("fps")
-                fps = float(fps_value) if fps_value is not None else 16.0
+                fps = float(fps_value) if fps_value is not None else 24.0
             except (ValueError, TypeError):
                 fps = 24.0
                 self.logger.warning(f"Scene {scene_id} - Node 88 FPS value is invalid. Defaulting to {fps} FPS.")
             
             duration = end - start
             # Calculate total required frames, rounding up to ensure the full duration is covered
-            required_length = math.ceil(duration * fps)
+            required_length = math.floor(duration * fps)
             
             # Set the length (frames) into the video generating node (assuming it's node 55)
             wf_copy["74"]["inputs"]["length"] = int(required_length)
