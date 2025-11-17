@@ -129,14 +129,11 @@ class CustomVideoConcatenator:
                 # Duration check and trim
                 if abs(audio_clip.duration - final_clip.duration) > 0.1:
                     print(f"WARNING: Audio clip duration ({audio_clip.duration:.2f}s) does not match video duration ({final_clip.duration:.2f}s). Trimming audio to match video duration.")
-                    audio_clip = audio_clip.subclip(0, final_clip.duration)
+                    audio_clip = audio_clip.subclipped(0, final_clip.duration)
                         
-                final_clip = final_clip.set_audio(audio_clip)
+                final_clip = final_clip.with_audio(audio_clip)
                 print("Successfully attached audio track.")
                 audio_clip.close() # Close audio clip immediately after setting
-            else:
-                # Detach audio from the final clip to ensure clean output if no audio was found
-                final_clip = final_clip.set_audio(None) 
                 
         except Exception as e:
             # Handle error during load or concatenation
