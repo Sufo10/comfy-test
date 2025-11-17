@@ -148,7 +148,7 @@ class CustomVideoConcatenator:
         
         # --- 4. Define Output Path ---
         # Use ComfyUI standard output directory with the user-defined subdirectory
-        output_dir_path = Path(folder_paths.get_output_directory()) / output_directory
+        output_dir_path = Path(os.path.abspath(output_directory))
         output_dir_path.mkdir(parents=True, exist_ok=True) 
             
         timestamp = int(time.time())
