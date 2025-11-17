@@ -103,7 +103,6 @@ class CustomVideoConcatenator:
                 audio_codec='aac',         
                 temp_audiofile='temp-audio.m4a', # Temporary file for audio processing
                 remove_temp=True,
-                verbose=False, 
                 logger=None # Suppress moviepy console spam
             )
             print(f"Video saved successfully to: {output_path}")
