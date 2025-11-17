@@ -160,7 +160,8 @@ class CustomVideoConcatenator:
         try:
             final_clip.write_videofile(
                 output_path, 
-                codec='libx264',           
+                codec='libx264',  
+                audio=final_audio_path,         
                 audio_codec='aac',         
                 remove_temp=True,
             )
