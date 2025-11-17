@@ -1,6 +1,6 @@
 import os
 import time
-from moviepy.editor import VideoFileClip, concatenate_videoclips
+from moviepy import VideoFileClip, concatenate_videoclips
 from pathlib import Path
 
 class CustomVideoConcatenator:

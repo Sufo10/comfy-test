@@ -12,7 +12,7 @@ NODE_CLASS_MAPPINGS = {
     "Scene Video WAN 14B Iterator" : SceneVideoWan14BIteratorNode,
     "Scene Video WAN 5B Iterator" : SceneVideoWan5BIteratorNode,
     "JSON Array Path Multiline Concatenator" : JSONArrayPathMultilineConcatenator,
-    "Custom Video Concatenator" : CustomVideoConcatenator
+    "Custom Pymovie Video Concatenator" : CustomVideoConcatenator
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
@@ -22,7 +22,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
      "Scene Video WAN 14B Iterator": "Scene Video WAN 14B Iterator",
      "Scene Video WAN 5B Iterator": "Scene Video WAN 5B Iterator",
      "JSON Array Path Multiline Concatenator": "JSON Array Path Multiline Concatenator",
-     "Custom Video Concatenator": "Custom Video Concatenator"
+     "Custom Pymovie Video Concatenator": "Custom Pymovie Video Concatenator"
 }
 
 
