@@ -263,7 +263,8 @@ class SceneVideoWan5BIteratorNode(BaseSceneIteratorNode):
 
     def _inject_scene_into_workflow(self, workflow, scene, video_output_dir):
         """Deep copies the workflow and injects the scenario and sets the filename prefix."""
-        scenario = scene.get("scenario", "No scenario provided")
+        positive_prompt = scene.get("positive_prompt", "No scenario provided")
+        negative_prompt = scene.get("negative_prompt", "No scenario provided")
         scene_id = scene.get("scene", "N/A")
         start = scene.get("start", 0)
         end = scene.get("end", 0)
@@ -273,17 +274,17 @@ class SceneVideoWan5BIteratorNode(BaseSceneIteratorNode):
         
         # Positive Prompt Injection
         if "6" in wf_copy:
-            wf_copy["6"]["inputs"]["text"] = scenario
+            wf_copy["6"]["inputs"]["text"] = positive_prompt
             self.logger.info(f"Scene {scene_id} - Injected scenario into node 6.")
         else:
             self.logger.warning(f"Scene {scene_id} - Node 6 not found for scenario injection.")
 
         # Negative Prompt Injection
-        # if "7" in wf_copy:
-        #     wf_copy["7"]["inputs"]["text"] = "text, subtitles, captions, lower-third graphics, on-screen text, interface windows, extra letters, distorted text, incorrect text, random text, artifacts, blur, low-resolution, pixelation, oversharpening, color banding, anatomical errors, deformed faces, unnatural lighting, inconsistent style, duplicated objects, warped geometry, low-detail backgrounds, bad proportions, missing details, unnatural shadows, jitter, flickering, motion distortion, camera shake, stretched textures, overexposed areas, underexposed areas, noise, glitch, incorrect perspective, poor depth, messy composition"
-        #     self.logger.info(f"Scene {scene_id} - Injected negative into node 7.")
-        # else:
-        #     self.logger.warning(f"Scene {scene_id} - Node 7 not found for scenario injection.")
+        if "7" in wf_copy:
+            wf_copy["7"]["inputs"]["text"] = negative_prompt
+            self.logger.info(f"Scene {scene_id} - Injected negative into node 7.")
+        else:
+            self.logger.warning(f"Scene {scene_id} - Node 7 not found for scenario injection.")
 
         # Filename Prefix Setting
         if "58" in wf_copy:
@@ -337,7 +338,8 @@ class SceneVideoWan14BIteratorNode(BaseSceneIteratorNode):
 
     def _inject_scene_into_workflow(self, workflow, scene, video_output_dir):
         """Deep copies the workflow and injects the scenario and sets the filename prefix."""
-        scenario = scene.get("scenario", "No scenario provided")
+        positive_prompt = scene.get("positive_prompt", "No scenario provided")
+        negative_prompt = scene.get("negative_prompt", "No scenario provided")
         scene_id = scene.get("scene", "N/A")
         start = scene.get("start", 0)
         end = scene.get("end", 0)
@@ -347,17 +349,17 @@ class SceneVideoWan14BIteratorNode(BaseSceneIteratorNode):
         
         # Positive Prompt Injection
         if "89" in wf_copy:
-            wf_copy["89"]["inputs"]["text"] = scenario
+            wf_copy["89"]["inputs"]["text"] = positive_prompt
             self.logger.info(f"Scene {scene_id} - Injected scenario into node 89.")
         else:
             self.logger.warning(f"Scene {scene_id} - Node 89 not found for scenario injection.")
 
-        # # Negative Prompt Injection
-        # if "72" in wf_copy:
-        #     wf_copy["72"]["inputs"]["text"] = "text, subtitles, captions, lower-third graphics, on-screen text, interface windows, extra letters, distorted text, incorrect text, random text, artifacts, blur, low-resolution, pixelation, oversharpening, color banding, anatomical errors, deformed faces, unnatural lighting, inconsistent style, duplicated objects, warped geometry, low-detail backgrounds, bad proportions, missing details, unnatural shadows, jitter, flickering, motion distortion, camera shake, stretched textures, overexposed areas, underexposed areas, noise, glitch, incorrect perspective, poor depth, messy composition"
-        #     self.logger.info(f"Scene {scene_id} - Injected negative into node 72.")
-        # else:
-        #     self.logger.warning(f"Scene {scene_id} - Node 72 not found for scenario injection.")
+        # Negative Prompt Injection
+        if "72" in wf_copy:
+            wf_copy["72"]["inputs"]["text"] = negative_prompt
+            self.logger.info(f"Scene {scene_id} - Injected negative into node 72.")
+        else:
+            self.logger.warning(f"Scene {scene_id} - Node 72 not found for scenario injection.")
 
         # Filename Prefix Setting
         if "80" in wf_copy:
