@@ -18,6 +18,10 @@ class BaseSceneIteratorNode:
     # NOTE: The OUTPUT_NODE_ID should be defined in the derived classes based on the workflow
     # It is used here as a placeholder for the polling logic.
     OUTPUT_NODE_ID = "58" 
+    POSITIVE_PROMPT_NODE_ID = "6"
+    NEGATIVE_PROMPT_NODE_ID = "7"
+    VIDEO_SETTINGS_NODE_ID = "55"
+    FPS_SETTING_NODE_ID = "57"
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -79,7 +83,59 @@ class BaseSceneIteratorNode:
         ABSTRACT METHOD: MUST BE OVERRIDDEN BY DERIVED CLASSES.
         Deep copies the workflow, injects the scene variables, and returns the modified workflow.
         """
-        raise NotImplementedError("Derived class must implement _inject_scene_into_workflow()")
+        """Deep copies the workflow and injects the scenario and sets the filename prefix."""
+        positive_prompt = scene.get("positive_prompt")
+        # negative_prompt = scene.get("negative_prompt")
+        scene_id = scene.get("scene", "N/A")
+        start = scene.get("start", 0)
+        end = scene.get("end", 0)
+
+        # Deep copy the workflow template for modification
+        wf_copy = copy.deepcopy(workflow)
+        
+        # Positive Prompt Injection 
+        if self.POSITIVE_PROMPT_NODE_ID in wf_copy:
+            wf_copy[self.POSITIVE_PROMPT_NODE_ID]["inputs"]["text"] = positive_prompt
+            self.logger.info(f"Scene {scene_id} - Injected scenario into node {self.POSITIVE_PROMPT_NODE_ID}.")
+        else:
+            self.logger.warning(f"Scene {scene_id} - Node {self.POSITIVE_PROMPT_NODE_ID} not found for scenario injection.")
+
+        # Negative Prompt Injection 
+        # if self.NEGATIVE_PROMPT_NODE_ID in wf_copy:
+        #     wf_copy[self.NEGATIVE_PROMPT_NODE_ID]["inputs"]["text"] = negative_prompt 
+        #     self.logger.info(f"Scene {scene_id} - Injected negative into node {self.NEGATIVE_PROMPT_NODE_ID}.")
+        # else:
+        #     self.logger.warning(f"Scene {scene_id} - Node {self.NEGATIVE_PROMPT_NODE_ID} not found for scenario injection.")
+
+        # Filename Prefix Setting (Node 58)
+        if self.OUTPUT_NODE_ID in wf_copy:
+            prefix = Path(video_output_dir).joinpath(f"scene_{scene_id}").as_posix()
+            wf_copy[self.OUTPUT_NODE_ID]["inputs"]["filename_prefix"] = prefix
+            self.logger.info(f"Scene {scene_id} - Set filename prefix to '{prefix}' in node {self.OUTPUT_NODE_ID}.")
+        else:
+            self.logger.warning(f"Scene {scene_id} - Node {self.OUTPUT_NODE_ID} not found for filename prefix setting.")
+        
+        # Video Length Calculation and Setting
+        if self.VIDEO_SETTINGS_NODE_ID in wf_copy and self.FPS_SETTING_NODE_ID in wf_copy:
+            try:
+                # Get FPS value from a connected node (assuming it's node 57)
+                fps_value = wf_copy.get(self.FPS_SETTING_NODE_ID, {}).get("inputs", {}).get("fps")
+                fps = float(fps_value) if fps_value is not None else 24.0
+            except (ValueError, TypeError):
+                fps = 24.0
+                self.logger.warning(f"Scene {scene_id} - Node {self.FPS_SETTING_NODE_ID} FPS value is invalid. Defaulting to {fps} FPS.")
+            
+            duration = end - start
+            # Calculate total required frames, rounding up to ensure the full duration is covered
+            required_length = math.ceil(duration * fps)
+            
+            # Set the length (frames) into the video generating node (assuming it's node 55)
+            wf_copy[self.VIDEO_SETTINGS_NODE_ID]["inputs"]["length"] = int(required_length)
+            self.logger.info(f"Scene {scene_id} - Set length to {required_length} frames in node {self.VIDEO_SETTINGS_NODE_ID} (Duration: {duration}s).")
+        else:
+            self.logger.warning(f"Scene {scene_id} - Node {self.VIDEO_SETTINGS_NODE_ID}/{self.FPS_SETTING_NODE_ID} not found for length setting.")
+            
+        return wf_copy
 
 
     def _poll_for_completion(self, comfy_api_url, prompt_id, scene_id, poll_interval = 5):
@@ -208,6 +264,7 @@ class BaseSceneIteratorNode:
                 return (json.dumps([{"scene": scene_id, "error": error_msg, "status": "failed"}]),)
         # --- END VALIDATION CHECK ---
         
+        total_duration = scenes[0].get("start", 0) 
         # Pre-execution checks and setup
         try:
             video_output_dir_path = Path(video_output_dir)
@@ -270,6 +327,10 @@ class SceneVideoWan5BIteratorNode(BaseSceneIteratorNode):
     """
 
     OUTPUT_NODE_ID = "58"
+    POSITIVE_PROMPT_NODE_ID = "6"
+    NEGATIVE_PROMPT_NODE_ID = "7"
+    VIDEO_SETTINGS_NODE_ID = "55"
+    FPS_SETTING_NODE_ID = "57"
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -282,61 +343,6 @@ class SceneVideoWan5BIteratorNode(BaseSceneIteratorNode):
     CATEGORY = "Custom Video Generation" 
     OUTPUT_NODE = True 
 
-    def _inject_scene_into_workflow(self, workflow, scene, video_output_dir):
-        """Deep copies the workflow and injects the scenario and sets the filename prefix."""
-        positive_prompt = scene.get("positive_prompt")
-        negative_prompt = scene.get("negative_prompt")
-        scene_id = scene.get("scene", "N/A")
-        start = scene.get("start", 0)
-        end = scene.get("end", 0)
-
-        # Deep copy the workflow template for modification
-        wf_copy = copy.deepcopy(workflow)
-        
-        # Positive Prompt Injection (Node 6)
-        if "6" in wf_copy:
-            wf_copy["6"]["inputs"]["text"] = positive_prompt
-            self.logger.info(f"Scene {scene_id} - Injected scenario into node 6.")
-        else:
-            self.logger.warning(f"Scene {scene_id} - Node 6 not found for scenario injection.")
-
-        # Negative Prompt Injection (Node 7)
-        if "7" in wf_copy:
-            wf_copy["7"]["inputs"]["text"] = negative_prompt
-            self.logger.info(f"Scene {scene_id} - Injected negative into node 7.")
-        else:
-            self.logger.warning(f"Scene {scene_id} - Node 7 not found for scenario injection.")
-
-        # Filename Prefix Setting (Node 58)
-        if self.OUTPUT_NODE_ID in wf_copy:
-            prefix = Path(video_output_dir).joinpath(f"scene_{scene_id}").as_posix()
-            wf_copy[self.OUTPUT_NODE_ID]["inputs"]["filename_prefix"] = prefix
-            self.logger.info(f"Scene {scene_id} - Set filename prefix to '{prefix}' in node {self.OUTPUT_NODE_ID}.")
-        else:
-            self.logger.warning(f"Scene {scene_id} - Node {self.OUTPUT_NODE_ID} not found for filename prefix setting.")
-        
-        # Video Length Calculation and Setting
-        if "55" in wf_copy and '57' in wf_copy:
-            try:
-                # Get FPS value from a connected node (assuming it's node 57)
-                fps_value = wf_copy.get("57", {}).get("inputs", {}).get("fps")
-                fps = float(fps_value) if fps_value is not None else 24.0
-            except (ValueError, TypeError):
-                fps = 24.0
-                self.logger.warning(f"Scene {scene_id} - Node 57 FPS value is invalid. Defaulting to {fps} FPS.")
-            
-            duration = end - start
-            # Calculate total required frames, rounding up to ensure the full duration is covered
-            required_length = math.ceil(duration * fps)
-            
-            # Set the length (frames) into the video generating node (assuming it's node 55)
-            wf_copy["55"]["inputs"]["length"] = int(required_length)
-            self.logger.info(f"Scene {scene_id} - Set length to {required_length} frames in node 55 (Duration: {duration}s).")
-        else:
-            self.logger.warning(f"Scene {scene_id} - Node 55/57 not found for length setting.")
-            
-        return wf_copy
-    
 
 class SceneVideoWan14BIteratorNode(BaseSceneIteratorNode):
     """
@@ -352,6 +358,10 @@ class SceneVideoWan14BIteratorNode(BaseSceneIteratorNode):
     """
 
     OUTPUT_NODE_ID = "80"
+    POSITIVE_PROMPT_NODE_ID = "89"
+    NEGATIVE_PROMPT_NODE_ID = "72"
+    VIDEO_SETTINGS_NODE_ID = "74"
+    FPS_SETTING_NODE_ID = "88"
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -364,57 +374,4 @@ class SceneVideoWan14BIteratorNode(BaseSceneIteratorNode):
     CATEGORY = "Custom Video Generation" 
     OUTPUT_NODE = True 
 
-    def _inject_scene_into_workflow(self, workflow, scene, video_output_dir):
-        """Deep copies the workflow and injects the scenario and sets the filename prefix."""
-        positive_prompt = scene.get("positive_prompt")
-        negative_prompt = scene.get("negative_prompt")
-        scene_id = scene.get("scene", "N/A")
-        start = scene.get("start", 0)
-        end = scene.get("end", 0)
-
-        # Deep copy the workflow template for modification
-        wf_copy = copy.deepcopy(workflow) 
-        
-        # Positive Prompt Injection (Node 89)
-        if "89" in wf_copy:
-            wf_copy["89"]["inputs"]["text"] = positive_prompt
-            self.logger.info(f"Scene {scene_id} - Injected scenario into node 89.")
-        else:
-            self.logger.warning(f"Scene {scene_id} - Node 89 not found for scenario injection.")
-
-        # Negative Prompt Injection (Node 72)
-        if "72" in wf_copy:
-            wf_copy["72"]["inputs"]["text"] = negative_prompt
-            self.logger.info(f"Scene {scene_id} - Injected negative into node 72.")
-        else:
-            self.logger.warning(f"Scene {scene_id} - Node 72 not found for scenario injection.")
-
-        # Filename Prefix Setting (Node 80)
-        if self.OUTPUT_NODE_ID in wf_copy:
-            prefix = Path(video_output_dir).joinpath(f"scene_{scene_id}").as_posix()
-            wf_copy[self.OUTPUT_NODE_ID]["inputs"]["filename_prefix"] = prefix
-            self.logger.info(f"Scene {scene_id} - Set filename prefix to '{prefix}' in node {self.OUTPUT_NODE_ID}.")
-        else:
-            self.logger.warning(f"Scene {scene_id} - Node {self.OUTPUT_NODE_ID} not found for filename prefix setting.")
-        
-        # Video Length Calculation and Setting
-        if "74" in wf_copy and '88' in wf_copy:
-            try:
-                # Get FPS value from a connected node (assuming it's node 88)
-                fps_value = wf_copy.get("88", {}).get("inputs", {}).get("fps")
-                fps = float(fps_value) if fps_value is not None else 24.0
-            except (ValueError, TypeError):
-                fps = 24.0
-                self.logger.warning(f"Scene {scene_id} - Node 88 FPS value is invalid. Defaulting to {fps} FPS.")
-            
-            duration = end - start
-            # Calculate total required frames, rounding up to ensure the full duration is covered
-            required_length = math.ceil(duration * fps) # Use ceil instead of floor for full duration
-            
-            # Set the length (frames) into the video generating node (assuming it's node 74)
-            wf_copy["74"]["inputs"]["length"] = int(required_length)
-            self.logger.info(f"Scene {scene_id} - Set length to {required_length} frames in node 74 (Duration: {duration}s).")
-        else:
-            self.logger.warning(f"Scene {scene_id} - Node 74/88 not found for length setting.")
-            
-        return wf_copy
+    
