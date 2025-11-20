@@ -17,7 +17,7 @@ class SceneImage2VideoIterator:
     """
     # NOTE: The OUTPUT_NODE_ID should be defined in the derived classes based on the workflow
     # It is used here as a placeholder for the polling logic.
-    OUTPUT_NODE_ID = "58" 
+    OUTPUT_NODE_ID = "108" 
     POSITIVE_PROMPT_NODE_ID = "93"
     NEGATIVE_PROMPT_NODE_ID = "89"
     VIDEO_SETTINGS_NODE_ID = "98"
