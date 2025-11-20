@@ -249,7 +249,7 @@ class SceneImage2VideoIterator:
                 if retries >= max_retries:
                     self.logger.error(f"Scene {scene_id} - Polling failed after {max_retries} retries.")
                     raise ConnectionError(f"Polling connection failed after {max_retries} retries.")
-                self.logger.warning(f"Scene {scene_id} - Retries count: {retries}/{max_retries}. Retrying in {poll_interval}s...")
+                self.logger.warning(f"Scene {scene_id} - {'Image' if is_image_poll else 'Video'} Retries count: {retries}/{max_retries}. Retrying in {poll_interval}s...")
 
             except requests.exceptions.RequestException as e:
                 retries += 1
