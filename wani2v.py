@@ -88,7 +88,7 @@ class SceneImage2VideoIterator:
         positive_prompt = scene.get("positive_prompt")
         start_time = time.time() 
 
-        self.logger.info(f"Scene {scene_id} Starting image generation...")
+        self.logger.info(f"Scene {scene_id} - **Image Generation Start** (Node {self.IMAGE_OUTPUT_NODE_ID}).") # New log
 
         try:
             # Inject prompt into image workflow
@@ -101,6 +101,7 @@ class SceneImage2VideoIterator:
                 self.logger.warning(f"Scene {scene_id} - Image prompt node {self.IMAGE_PROMPT_NODE_ID} not found.")
 
             # Queue Prompt
+            self.logger.info(f"Scene {scene_id} - Sending image prompt to {comfy_api_url}/prompt...") # New log
             response = requests.post(f"{comfy_api_url}/prompt", json={"prompt": image_wf_copy}, timeout=30)
             response.raise_for_status() 
             response_json = response.json()
@@ -108,7 +109,7 @@ class SceneImage2VideoIterator:
             
             if not prompt_id:
                 raise ValueError(f"ComfyUI did not return a prompt_id for image generation. Response: {response_json}")
-            self.logger.info(f"Scene {scene_id} - Image prompt queued. ID: {prompt_id}")
+            self.logger.info(f"Scene {scene_id} - Image prompt successfully queued. ID: {prompt_id}") # Modified log
             
             result_path = self._poll_for_completion(
                 comfy_api_url, prompt_id, scene_id, 
@@ -116,7 +117,7 @@ class SceneImage2VideoIterator:
             )
             
             duration = round(time.time() - start_time, 2)
-            self.logger.info(f"Scene {scene_id} - Image SUCCESS. Generated in {duration}s. Path: {result_path}")
+            self.logger.info(f"Scene {scene_id} - **Image SUCCESS** in {duration}s. File: {result_path}") # Modified log
             return result_path
         
         except Exception as e:
@@ -185,9 +186,13 @@ class SceneImage2VideoIterator:
         else:
             self.logger.warning(f"Scene {scene_id} - Node {self.VIDEO_SETTINGS_NODE_ID}/{self.FPS_SETTING_NODE_ID} not found for length setting.")
             
+        # Image Path Injection (for video workflow)
         if self.IMAGE_PLACEHOLDER_NODE_ID in wf_copy:
+            # Note: The logic here assumes the Image Placeholder node expects the bare filename and 
+            # might handle file type/subfolder internally, or the ComfyUI API implicitly handles it.
+            # Using the format provided in your original _inject_scene_into_workflow method.
             wf_copy[self.IMAGE_PLACEHOLDER_NODE_ID]["inputs"]["image_path"] = f"{image_path} [output]"
-            self.logger.info(f"Scene {scene_id} - Injected image path into node {self.IMAGE_PLACEHOLDER_NODE_ID}.")
+            self.logger.info(f"Scene {scene_id} - Injected image path '{image_path}' into node {self.IMAGE_PLACEHOLDER_NODE_ID}.")
         else:
             self.logger.warning(f"Scene {scene_id} - Node {self.IMAGE_PLACEHOLDER_NODE_ID} not found for image path injection.")
         return wf_copy
@@ -196,8 +201,10 @@ class SceneImage2VideoIterator:
     def _poll_for_completion(self, comfy_api_url, prompt_id, scene_id, poll_interval = 5, output_node_id = None):
         """Polls the ComfyUI API history for the prompt's completion."""
         target_node_id = output_node_id or self.OUTPUT_NODE_ID
+        is_image_poll = output_node_id is not None
+        step_name = "Image Generation" if is_image_poll else "Video Generation"
 
-        self.logger.info(f"Scene {scene_id} - Starting poll loop for {'Image Generation' if output_node_id is not None else 'Video Generation'} prompt ID: {prompt_id}.")
+        self.logger.info(f"Scene {scene_id} - Starting poll loop for **{step_name}** prompt ID: {prompt_id} (Target Node: {target_node_id}).") # Modified log
         
         max_retries = 100
         retries = 0
@@ -219,12 +226,17 @@ class SceneImage2VideoIterator:
                     if outputs_for_output_node:
                         # Assuming success if the save node ran and produced a file info
                         output_info = outputs_for_output_node[0]
-                        # ComfyUI file structure includes type (e.g., 'output')
-                        if output_node_id is None:
-                            output_path = f"{output_info.get('type')}/{output_info.get('subfolder', '')}/{output_info.get('filename', '')}"
-                        else:
+                        
+                        if is_image_poll:
+                            # For image generation, the path is often just the filename for later reuse
                             output_path = output_info.get('filename', '')
-                        self.logger.info(f"Scene {scene_id} - Polling successful. Status: COMPLETED. File: {output_path}")
+                            log_path = f"Filename: {output_path}"
+                        else:
+                            # For video generation, it's the full path including subfolder/type
+                            output_path = f"{output_info.get('type')}/{output_info.get('subfolder', '')}/{output_info.get('filename', '')}"
+                            log_path = f"Full Path: {output_path}"
+                            
+                        self.logger.info(f"Scene {scene_id} - **{step_name}** completed. Path: {log_path}") # Modified log
                         return output_path
                     
                     # Check for explicit failure state reported by the API
@@ -260,14 +272,15 @@ class SceneImage2VideoIterator:
         self.logger.info(f"Scenario Preview: {scenario[:80]}...")
         
         try:
+            # 1. RUN IMAGE GENERATION
             image_path = self._run_image_generation(comfy_api_url, scene, image_workflow_data)
-            # 1. Inject Prompt 
-            self.logger.info(f"Scene {scene_id} (Step 1/3): Injecting prompt into workflow.")
-            # Pass next_scene to the injector
+            
+            # 2. Inject Prompt and Image Path (Step 1/3 of Video Process)
+            self.logger.info(f"Scene {scene_id} (Video Step 1/3): Injecting prompt into workflow.")
             workflow = self._inject_scene_into_workflow(video_workflow_data, scene, next_scene, video_output_dir, image_path=image_path)
             
-            # 2. Queue Prompt
-            self.logger.info(f"Scene {scene_id} (Step 2/3): Sending prompt to ComfyUI API: {comfy_api_url}/prompt")
+            # 3. Queue Video Prompt (Step 2/3 of Video Process)
+            self.logger.info(f"Scene {scene_id} (Video Step 2/3): Sending video prompt to ComfyUI API: {comfy_api_url}/prompt")
             response = requests.post(f"{comfy_api_url}/prompt", json={"prompt": workflow}, timeout=30)
             response.raise_for_status() 
             
@@ -276,16 +289,15 @@ class SceneImage2VideoIterator:
             
             if not prompt_id:
                 raise ValueError(f"ComfyUI did not return a prompt_id. Response: {response_json}")
-            self.logger.info(f"Scene {scene_id} - Prompt successfully queued. Prompt ID: {prompt_id}")
+            self.logger.info(f"Scene {scene_id} - Video prompt successfully queued. Prompt ID: {prompt_id}")
             
-            # 3. Poll for Result
-            self.logger.info(f"Scene {scene_id} (Step 3/3): Polling for completion.")
-            # Result is the output file path on the server
+            # 4. Poll for Video Result (Step 3/3 of Video Process)
+            self.logger.info(f"Scene {scene_id} (Video Step 3/3): Polling for completion.")
             result_path = self._poll_for_completion(comfy_api_url, prompt_id, scene_id)
             
-            # 4. Success
+            # 5. Success
             duration = round(time.time() - start_time, 2)
-            self.logger.info(f"Scene {scene_id} - SUCCESS. Generation completed on server in {duration}s.")
+            self.logger.info(f"Scene {scene_id} - **Video SUCCESS**. Total Time: {duration}s.")
             
             return {"scene": scene_id, "video_path": result_path, "status": "done"}
         
@@ -344,7 +356,7 @@ class SceneImage2VideoIterator:
             
             with open(video_workflow_path, "r") as f:
                 video_workflow_data = json.load(f)
-            self.logger.info(f"Workflow template loaded from: {video_workflow_path}")
+            self.logger.info(f"Video workflow template loaded from: {video_workflow_path}")
 
             with open(image_workflow_path, "r") as f:
                 image_workflow_data = json.load(f)
@@ -397,4 +409,3 @@ class SceneImage2VideoIterator:
 
         # Return results as a JSON string
         return (final_results_json,)
-    
