@@ -34,7 +34,7 @@
   "86": {
     "inputs": {
       "add_noise": "enable",
-      "noise_seed": 702001891108215,
+      "noise_seed": 969581988422948,
       "steps": 4,
       "cfg": 1,
       "sampler_name": "euler",
@@ -130,7 +130,7 @@
       "positive": ["93", 0],
       "negative": ["89", 0],
       "vae": ["90", 0],
-      "start_image": ["119", 0]
+      "start_image": ["121", 0]
     },
     "class_type": "WanImageToVideo",
     "_meta": {
@@ -192,14 +192,13 @@
       "title": "Save Video"
     }
   },
-  "119": {
+  "121": {
     "inputs": {
-      "image": "ComfyUI_00023_.png [output]",
-      "refresh": "refresh"
+      "image_path": "output/ComfyUI_00026_.png"
     },
-    "class_type": "LoadImageOutput",
+    "class_type": "Load Image Custom",
     "_meta": {
-      "title": "Load Image (from Outputs)"
+      "title": "Load Image From Path"
     }
   }
 }
