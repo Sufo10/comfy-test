@@ -51,6 +51,10 @@ class CustomVideoConcatenator:
 
     def concat_videos(self, multiline_video_paths, output_filename_prefix, output_directory, audio_path=None, audio=None):
         
+        print(f"\n{'='*30}VIDEO PATHS START{'='*30}")
+        print(multiline_video_paths)
+        print(f"\n{'='*30}VIDEO PATHS END{'='*30}")
+
         print(f"Starting video concatenation for files with prefix: {output_filename_prefix}")
 
         final_audio_path = None
