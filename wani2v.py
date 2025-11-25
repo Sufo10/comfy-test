@@ -85,7 +85,7 @@ class SceneImage2VideoIterator:
     def _run_image_generation(self, comfy_api_url, scene, image_workflow_data):
         """Generates the initial image keyframe for the scene."""
         scene_id = scene.get("scene", "N/A")
-        positive_prompt = scene.get("image_prompt")
+        positive_prompt = scene.get("image_prompt") or scene.get("positive_prompt")
         start_time = time.time() 
 
         self.logger.info(f"Scene {scene_id} - **Image Generation Start** (Node {self.IMAGE_OUTPUT_NODE_ID}).") # New log
@@ -133,7 +133,7 @@ class SceneImage2VideoIterator:
         The 'next_scene' dictionary is now available for transition logic.
         """
         """Deep copies the workflow and injects the scenario and sets the filename prefix."""
-        positive_prompt = scene.get("video_prompt")
+        positive_prompt = scene.get("video_prompt") or scene.get("positive_prompt")
         # negative_prompt = scene.get("negative_prompt") # Keeping this commented as in the original code
         scene_id = scene.get("scene", "N/A")
         start = scene.get("start", 0)
@@ -265,7 +265,7 @@ class SceneImage2VideoIterator:
         The `next_scene` dictionary is passed for transition logic.
         """
         scene_id = scene.get("scene", "N/A")
-        scenario = scene.get("video_prompt", "No scenario provided") # Use positive prompt for preview
+        scenario = scene.get("video_prompt", "No scenario provided") or scene.get("positive_prompt", "No scenario provided")
         start_time = time.time() 
         
         self.logger.info(f"\n--- Scene {scene_id} START ---")
@@ -335,17 +335,27 @@ class SceneImage2VideoIterator:
         # --- MANDATORY VALIDATION CHECK ---
         for i, scene in enumerate(scenes):
             scene_id = scene.get("scene", f"Index {i+1}")
-            if "image_prompt" not in scene or not scene["image_prompt"]:
-                error_msg = f"Scene {scene_id} is missing the required key: 'image_prompt' or its value is empty. Cannot proceed."
-                self.logger.error(error_msg)
-                return (json.dumps([{"scene": scene_id, "error": error_msg, "status": "failed"}]),)
-            
 
-            if "video_prompt" not in scene or not scene["video_prompt"]:
-                error_msg = f"Scene {scene_id} is missing the required key: 'video_prompt' or its value is empty. Cannot proceed."
+            # --- CHECK FOR VALID PROMPT CONFIGURATION (EITHER A OR B) ---
+            has_image_video_pair = (
+                "image_prompt" in scene and scene["image_prompt"] and
+                "video_prompt" in scene and scene["video_prompt"]
+            )
+
+            has_positive_prompt = (
+                "positive_prompt" in scene and scene["positive_prompt"]
+            )
+    
+            # If NEITHER of the valid configurations (A or B) is met, raise an error.
+            if not (has_image_video_pair or has_positive_prompt):
+                error_msg = (
+                    f"Scene {scene_id} is missing a required prompt configuration. "
+                    f"Requires either ('image_prompt' AND 'video_prompt') OR ('positive_prompt'). Cannot proceed."
+                )
                 self.logger.error(error_msg)
                 return (json.dumps([{"scene": scene_id, "error": error_msg, "status": "failed"}]),)
-            
+
+            # --- CHECK FOR NEGATIVE PROMPT (STILL REQUIRED) ---
             if "negative_prompt" not in scene or not scene["negative_prompt"]:
                 error_msg = f"Scene {scene_id} is missing the required key: 'negative_prompt' or its value is empty. Cannot proceed."
                 self.logger.error(error_msg)
