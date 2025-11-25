@@ -318,6 +318,9 @@ class SceneImage2VideoIterator:
         Now correctly determines and passes the `next_scene` object.
         """
         total_start_time = time.time()
+        print(f"{'='*30}Scenes START{'='*30}")
+        print(scenes_json)
+        print(f"{'='*30}Scenes END{'='*30}")
         try:
             scenes = json.loads(scenes_json)
         except json.JSONDecodeError:
