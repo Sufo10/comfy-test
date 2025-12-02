@@ -134,7 +134,7 @@ class SceneImage2VideoIterator:
         """
         """Deep copies the workflow and injects the scenario and sets the filename prefix."""
         positive_prompt = scene.get("video_prompt") or scene.get("positive_prompt")
-        # negative_prompt = scene.get("negative_prompt") # Keeping this commented as in the original code
+        negative_prompt = scene.get("negative_prompt") # Keeping this commented as in the original code
         scene_id = scene.get("scene", "N/A")
         start = scene.get("start", 0)
         end = scene.get("end", 0)
@@ -152,11 +152,11 @@ class SceneImage2VideoIterator:
             self.logger.warning(f"Scene {scene_id} - Node {self.POSITIVE_PROMPT_NODE_ID} not found for scenario injection.")
 
         # Negative Prompt Injection 
-        # if self.NEGATIVE_PROMPT_NODE_ID in wf_copy:
-        #     wf_copy[self.NEGATIVE_PROMPT_NODE_ID]["inputs"]["text"] = negative_prompt 
-        #     self.logger.info(f"Scene {scene_id} - Injected negative into node {self.NEGATIVE_PROMPT_NODE_ID}.")
-        # else:
-        #     self.logger.warning(f"Scene {scene_id} - Node {self.NEGATIVE_PROMPT_NODE_ID} not found for scenario injection.")
+        if self.NEGATIVE_PROMPT_NODE_ID in wf_copy:
+            wf_copy[self.NEGATIVE_PROMPT_NODE_ID]["inputs"]["text"] = negative_prompt 
+            self.logger.info(f"Scene {scene_id} - Injected negative into node {self.NEGATIVE_PROMPT_NODE_ID}.")
+        else:
+            self.logger.warning(f"Scene {scene_id} - Node {self.NEGATIVE_PROMPT_NODE_ID} not found for scenario injection.")
 
         # Filename Prefix Setting 
         if self.OUTPUT_NODE_ID in wf_copy:
