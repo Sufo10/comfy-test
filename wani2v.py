@@ -226,6 +226,8 @@ class SceneImage2VideoIterator:
                     if outputs_for_output_node:
                         # Assuming success if the save node ran and produced a file info
                         output_info = outputs_for_output_node[0]
+                        self.logger.debug(f"Scene {scene_id} - Polling successful. Status: COMPLETED. Output Info: {output_info}")
+
                         
                         if is_image_poll:
                             # For image generation, the path is often just the filename for later reuse
