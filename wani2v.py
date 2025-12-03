@@ -96,7 +96,7 @@ class SceneImage2VideoIterator:
             
             if self.IMAGE_PROMPT_NODE_ID in image_wf_copy:
                 image_wf_copy[self.IMAGE_PROMPT_NODE_ID]["inputs"]["text"] = positive_prompt
-                self.logger.debug(f"Scene {scene_id} - Injected positive prompt for image.")
+                self.logger.info(f"Scene {scene_id} - Injected positive prompt for image.")
             else:
                 self.logger.warning(f"Scene {scene_id} - Image prompt node {self.IMAGE_PROMPT_NODE_ID} not found.")
 
@@ -215,7 +215,7 @@ class SceneImage2VideoIterator:
                 response = requests.get(f"{comfy_api_url}/history/{prompt_id}", timeout=10)
                 response.raise_for_status() # Catches HTTPError if status code is bad
                 data = response.json()
-                self.logger.debug(f"Scene {scene_id} - Polling response data: {data}")
+                self.logger.info(f"Scene {scene_id} - Polling response data: {data}")
                 
                 if prompt_id in data:
                     entry = data[prompt_id]
@@ -226,7 +226,7 @@ class SceneImage2VideoIterator:
                     if outputs_for_output_node:
                         # Assuming success if the save node ran and produced a file info
                         output_info = outputs_for_output_node[0]
-                        self.logger.debug(f"Scene {scene_id} - Polling successful. Status: COMPLETED. Output Info: {output_info}")
+                        self.logger.info(f"Scene {scene_id} - Polling successful. Status: COMPLETED. Output Info: {output_info}")
 
                         
                         if is_image_poll:
