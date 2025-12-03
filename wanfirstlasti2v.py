@@ -126,10 +126,9 @@ class SceneImage2VideoFirstLastIterator:
 
             # 2. Inject Previous Image Path (Only for LAST image generation)
             if not is_first_image and image_placeholder_node_id and first_image_path:
-                full_path_for_comfy = f"output/{first_image_path}" 
                 if image_placeholder_node_id in image_wf_copy:
-                    image_wf_copy[image_placeholder_node_id]["inputs"]["image_path"] = full_path_for_comfy
-                    self.logger.debug(f"[Scene {scene_id}] Injected previous image path '{full_path_for_comfy}' into node {image_placeholder_node_id}.")
+                    image_wf_copy[image_placeholder_node_id]["inputs"]["image_path"] = first_image_path
+                    self.logger.debug(f"[Scene {scene_id}] Injected previous image path '{first_image_path}' into node {image_placeholder_node_id}.")
                 else:
                     self.logger.warning(f"[Scene {scene_id}] Image placeholder node {image_placeholder_node_id} not found for path injection.")
 
@@ -211,18 +210,15 @@ class SceneImage2VideoFirstLastIterator:
             
             wf_copy[self.VIDEO_SETTINGS_NODE_ID]["inputs"]["length"] = int(required_length)
             self.logger.info(f"[Scene {scene_id}] Calculated duration: {duration}s @ {fps} FPS. Set frame length to {required_length} in node {self.VIDEO_SETTINGS_NODE_ID}.")
-        
-        # 4. Image Path Injection (for video workflow)
-        full_first_image_path = f"output/{first_image_path}"
-        full_last_image_path = f"output/{last_image_path}"
+
 
         if self.VIDEO_FIRST_IMAGE_PLACEHOLDER_NODE_ID in wf_copy:
-            wf_copy[self.VIDEO_FIRST_IMAGE_PLACEHOLDER_NODE_ID]["inputs"]["image_path"] = full_first_image_path
-            self.logger.debug(f"[Scene {scene_id}] Injected FIRST image path '{full_first_image_path}' into node {self.VIDEO_FIRST_IMAGE_PLACEHOLDER_NODE_ID}.")
+            wf_copy[self.VIDEO_FIRST_IMAGE_PLACEHOLDER_NODE_ID]["inputs"]["image_path"] = first_image_path
+            self.logger.debug(f"[Scene {scene_id}] Injected FIRST image path '{first_image_path}' into node {self.VIDEO_FIRST_IMAGE_PLACEHOLDER_NODE_ID}.")
 
         if self.VIDEO_LAST_IMAGE_PLACEHOLDER_NODE_ID in wf_copy:
-            wf_copy[self.VIDEO_LAST_IMAGE_PLACEHOLDER_NODE_ID]["inputs"]["image_path"] = full_last_image_path
-            self.logger.debug(f"[Scene {scene_id}] Injected LAST image path '{full_last_image_path}' into node {self.VIDEO_LAST_IMAGE_PLACEHOLDER_NODE_ID}.")
+            wf_copy[self.VIDEO_LAST_IMAGE_PLACEHOLDER_NODE_ID]["inputs"]["image_path"] = last_image_path
+            self.logger.debug(f"[Scene {scene_id}] Injected LAST image path '{last_image_path}' into node {self.VIDEO_LAST_IMAGE_PLACEHOLDER_NODE_ID}.")
         
         return wf_copy
 
