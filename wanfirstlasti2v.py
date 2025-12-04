@@ -64,6 +64,10 @@ class SceneImage2VideoFirstLastIterator:
     def __init__(self):
         self.logger = self._setup_logging()
 
+    def _free_memory(self, comfy_api_url):
+        return requests.post(f"{comfy_api_url}/free", json={"free_memory": True, "unload_models": True}, timeout=30)
+         
+
     def _setup_logging(self):
         """Sets up file logging for the node, ensuring unique file handlers."""
         log_path = Path("logs")
@@ -249,6 +253,10 @@ class SceneImage2VideoFirstLastIterator:
                         output_info = outputs_for_output_node[0]
                         
                         output_path = f"{output_info.get('type')}/{output_info.get('subfolder', '')}/{output_info.get('filename', '')}".strip('/')
+
+                        res = self._free_memory(comfy_api_url)
+                        res.raise_for_status()
+                        self.logger.info(f"[Scene {scene_id}] Memory freed after {step_name}. Response: {res.json()}")
                             
                         self.logger.info(f"[Scene {scene_id}] Polling successful. **{step_name}** completed. Result Path: {output_path}")
                         return output_path
