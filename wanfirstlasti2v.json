@@ -19,7 +19,7 @@
       "title": "Load VAE"
     }
   },
-  "4": {
+  "4": { 
     "inputs": {
       "unet_name": "wan2.2_i2v_high_noise_14B_fp8_scaled.safetensors",
       "weight_dtype": "default"

@@ -124,7 +124,7 @@ class SceneImage2VideoFirstLastIterator:
                 if not positive_prompt:
                      raise ValueError(f"Prompt for {image_type} image is missing or empty.")
                 image_wf_copy[prompt_node_id]["inputs"]["text"] = positive_prompt
-                self.logger.debug(f"[Scene {scene_id}] Injected positive prompt for {image_type} image into node {prompt_node_id}.")
+                self.logger.info(f"[Scene {scene_id}] Injected positive prompt for {image_type} image into node {prompt_node_id}.")
             else:
                 self.logger.warning(f"[Scene {scene_id}] Prompt node {prompt_node_id} not found in {image_type} image workflow.")
 
@@ -132,7 +132,7 @@ class SceneImage2VideoFirstLastIterator:
             if not is_first_image and image_placeholder_node_id and first_image_path:
                 if image_placeholder_node_id in image_wf_copy:
                     image_wf_copy[image_placeholder_node_id]["inputs"]["image_path"] = first_image_path
-                    self.logger.debug(f"[Scene {scene_id}] Injected previous image path '{first_image_path}' into node {image_placeholder_node_id}.")
+                    self.logger.info(f"[Scene {scene_id}] Injected previous image path '{first_image_path}' into node {image_placeholder_node_id}.")
                 else:
                     self.logger.warning(f"[Scene {scene_id}] Image placeholder node {image_placeholder_node_id} not found for path injection.")
 
@@ -188,17 +188,17 @@ class SceneImage2VideoFirstLastIterator:
         # 1. Prompt Injection 
         if self.POSITIVE_PROMPT_NODE_ID in wf_copy:
             wf_copy[self.POSITIVE_PROMPT_NODE_ID]["inputs"]["text"] = positive_prompt
-            self.logger.debug(f"[Scene {scene_id}] Injected POSITIVE prompt into node {self.POSITIVE_PROMPT_NODE_ID}.")
+            self.logger.info(f"[Scene {scene_id}] Injected POSITIVE prompt into node {self.POSITIVE_PROMPT_NODE_ID}.")
         
         if self.NEGATIVE_PROMPT_NODE_ID in wf_copy:
             wf_copy[self.NEGATIVE_PROMPT_NODE_ID]["inputs"]["text"] = negative_prompt 
-            self.logger.debug(f"[Scene {scene_id}] Injected NEGATIVE prompt into node {self.NEGATIVE_PROMPT_NODE_ID}.")
+            self.logger.info(f"[Scene {scene_id}] Injected NEGATIVE prompt into node {self.NEGATIVE_PROMPT_NODE_ID}.")
 
         # 2. Filename Prefix Setting 
         if self.OUTPUT_NODE_ID in wf_copy:
             prefix = Path(video_output_dir).joinpath(f"scene_{scene_id}").as_posix()
             wf_copy[self.OUTPUT_NODE_ID]["inputs"]["filename_prefix"] = prefix
-            self.logger.debug(f"[Scene {scene_id}] Set output prefix to '{prefix}' in node {self.OUTPUT_NODE_ID}.")
+            self.logger.info(f"[Scene {scene_id}] Set output prefix to '{prefix}' in node {self.OUTPUT_NODE_ID}.")
         
         # 3. Video Length Calculation and Setting
         if self.VIDEO_SETTINGS_NODE_ID in wf_copy and self.FPS_SETTING_NODE_ID in wf_copy:
@@ -218,11 +218,11 @@ class SceneImage2VideoFirstLastIterator:
 
         if self.VIDEO_FIRST_IMAGE_PLACEHOLDER_NODE_ID in wf_copy:
             wf_copy[self.VIDEO_FIRST_IMAGE_PLACEHOLDER_NODE_ID]["inputs"]["image_path"] = first_image_path
-            self.logger.debug(f"[Scene {scene_id}] Injected FIRST image path '{first_image_path}' into node {self.VIDEO_FIRST_IMAGE_PLACEHOLDER_NODE_ID}.")
+            self.logger.info(f"[Scene {scene_id}] Injected FIRST image path '{first_image_path}' into node {self.VIDEO_FIRST_IMAGE_PLACEHOLDER_NODE_ID}.")
 
         if self.VIDEO_LAST_IMAGE_PLACEHOLDER_NODE_ID in wf_copy:
             wf_copy[self.VIDEO_LAST_IMAGE_PLACEHOLDER_NODE_ID]["inputs"]["image_path"] = last_image_path
-            self.logger.debug(f"[Scene {scene_id}] Injected LAST image path '{last_image_path}' into node {self.VIDEO_LAST_IMAGE_PLACEHOLDER_NODE_ID}.")
+            self.logger.info(f"[Scene {scene_id}] Injected LAST image path '{last_image_path}' into node {self.VIDEO_LAST_IMAGE_PLACEHOLDER_NODE_ID}.")
         
         return wf_copy
 
