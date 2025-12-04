@@ -191,7 +191,7 @@ class SceneImage2VideoIterator:
             # Note: The logic here assumes the Image Placeholder node expects the bare filename and 
             # might handle file type/subfolder internally, or the ComfyUI API implicitly handles it.
             # Using the format provided in your original _inject_scene_into_workflow method.
-            wf_copy[self.IMAGE_PLACEHOLDER_NODE_ID]["inputs"]["image_path"] = f"output/{image_path}"
+            wf_copy[self.IMAGE_PLACEHOLDER_NODE_ID]["inputs"]["image_path"] = image_path
             self.logger.info(f"Scene {scene_id} - Injected image path '{image_path}' into node {self.IMAGE_PLACEHOLDER_NODE_ID}.")
         else:
             self.logger.warning(f"Scene {scene_id} - Node {self.IMAGE_PLACEHOLDER_NODE_ID} not found for image path injection.")
