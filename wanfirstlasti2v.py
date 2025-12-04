@@ -229,7 +229,7 @@ class SceneImage2VideoFirstLastIterator:
 
         self.logger.info(f"[Scene {scene_id}] Starting poll loop for **{step_name}** (Prompt ID: {prompt_id}, Target Node: {target_node_id}).")
         
-        max_retries = 150
+        max_retries = 200
         retries = 0
 
         while retries < max_retries:
